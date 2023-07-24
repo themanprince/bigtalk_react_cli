@@ -1,0 +1,8 @@
+.the-input {
+	background-color: black;
+	color: #ffffff;
+	border: none;
+}
+.the-input:focus {
+	outline: none;
+}

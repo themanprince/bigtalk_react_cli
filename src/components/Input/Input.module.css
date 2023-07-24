@@ -1,0 +1,29 @@
+.first-row {
+	display: flex;
+	gap: 5px;
+}
+
+.path {
+	flex-basis: auto;
+	flex-shrink: 1;
+	color: var(--bt-path-color);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	direction: rtl;
+}
+
+.sep {
+	flex-basis: 10px;
+}
+
+.first-row > *:last-child /*input fld*/{
+	flex-basis: 100vw; /*didnt know this would work*/
+}
+
+.regular-row {
+ 	display: flex;
+}
+.regular-row > * {
+	flex-basis: 100vw;
+}
