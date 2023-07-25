@@ -36,15 +36,30 @@ export default class Input extends Component {
 		}
 	}
 	
+	/*next method will be passed to flds. it is used to remove backspaced flds from state*/
+	/*it is assumed however that the backspace field to remove is the one representing the very last(ith)
+	element in inputFields arr */
+	removeLast = () => {
+		this.setState(({inputFields}) => {
+			const copy = [...inputFields];
+			copy.pop();
+			return {
+				"inputFields": copy
+			};	
+		});
+	}
+	
 	render() {
 		const {inputFields} = this.state;
 		const {path, sep} = this.props;
 		
 		//making Fld views out of all the text models
-		const FldViews = inputFields.map((text, i) => <Fld 
+		const FldViews = inputFields.map((text, i, arr) => <Fld 
 				addInput={this.addInput /*passing it the func so that it can add new fields once limit passes in its input handler*/}
 				value={text}
-				setValue={this.setFld(i)}
+				isLastInput={(i === (arr.length - 1))? false: true} /*for telling the input its the last one so that it can auto focus and be;enabled on every;render*/
+				setValue={this.setFld(i)/*Higher Order Func*/}
+				remove={this.removeLast}
 			/>);
 		return (
 		<form>
