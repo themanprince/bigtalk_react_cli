@@ -1,0 +1,40 @@
+keep ref of last one in parent
+after every render in parent
+	make sure last field is enabled
+	give it focus
+
+constructor
+	do React.createRef
+
+LimitPassed(value)
+	if limit ain't already calculated
+		calculate it
+	if value length exceeds limit
+		create new fld with its excess as val
+		disable curr fld
+		return true
+	else
+		return false
+
+
+render
+	pass var init. in constructor to ref
+
+onMount
+	if the certain prop was passed to this component
+		pass the var init. in contructor to the parent component
+	LimitPassed(props val)
+
+
+onChange
+	if value added
+		LimitPassed(newVal) || reflect change
+			
+	if value removed
+		if fld emptied
+			delete current fld
+		else
+			reflect change
+
+onWillUnmount
+	remove its DOM ref from parent list

@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import React, {Component, createRef} from "react";
 import FldStyle from "./Fld.module.css";
 
 export default class Fld extends Component {
@@ -9,7 +9,7 @@ export default class Fld extends Component {
 		
 		this.limit = null; //its charLimit... will be set in ComponentDidMount lifecycle
 		
-		this.inputDOM = null; //the DOM reference to the input element... will be set in render method
+		this.inputDOM = createRef(); //the DOM reference to the input element... will be set in render method
 	}
 	
 	charLimit = (width) => {
@@ -73,31 +73,94 @@ export default class Fld extends Component {
 		}
 	}
 	
+	limitPassed = (value, source) => {
+		//calculating limit if it ain't already
+		if(!this.limit)
+			this.limit = this.charLimit(this.inputDOM.current.getBoundingClientRect().width);
+		
+		if(value.length > (this.limit - 1)) {
+			console.log(`got here so Fld limit passed, source is ${source}`);
+			const {addInput, setValue, setLimitPassedOnMount} = this.props;
+			const remaining = value.slice(0, this.limit);
+							
+			setValue(remaining);
+			//disabling it next
+			this.inputDOM.current.disabled = true;
+			console.log(`Fld inputDOM ref disabled prop has been set to true and inputDOM is `, this.inputDOM.current);
+			//getting the excess text to move it to new line
+			let excess = value.slice(this.limit);
+			addInput(excess);
+			
+			if(source === "componentDidMount")
+				setLimitPassedOnMount(true);
+			else
+				setLimitPassedOnMount(false);
+			
+			return true;
+		} else
+			return false;
+	}
+	
+	//next two shit are required for my change handler
+	valueAddedAction = (newVal) => {
+		const {setValue} = this.props;
+		/*below is like... if limit not passed, reflect changes
+		else action already been defined in limitPassed
+		*/
+		this.limitPassed(newVal, "valueAddedAction") || setValue(newVal); 
+	}
+	
+	valueRemovedAction = (newVal) => {
+		const {setValue, remove} = this.props;
+		
+		if(newVal.length === 0) { //means value removal caused input fld emptying
+			console.log(`got here so removal made fld empty`);
+			remove(); //remove it
+		} else
+			setValue(newVal); //its just a regular removal, set it
+	}
+	
 	/*lifecycles*/
 	componentDidMount() {
-		//apparently, this.inputDOM has already been set since render() was done before this method
-		this.limit = this.charLimit(this.inputDOM.getBoundingClientRect().width);
-		this.inputDOM.focus();
-		//focus has to happen first incase this value is actually greater
-		//than limit and we have to mke new input and give it focus...
-		//so this one dont collect focus after creafing it
-		this.isLimitPassed(this.props.value);
-		//the isLimitPassed function's declaration is more like... if yes, you know what to do... lol, laugh
+		console.group(`Fld componentDidMount`);
+		//checking if I'm supposed to pass its ref to parent
+		const {passRef, value} = this.props;
+		
+		console.log(`in Fld didMount cycle, passRef is ${passRef}`)
+		
+		passRef && console.log(`if I'm right, passRef was given to this comp.\n inputDOM is `, this.inputDOM.current);
+		
+		if(passRef !== null)
+			passRef(this.inputDOM.current);	//apparently, this.inputDOM has already been set since render() was done before this method
+		
+		console.log(`checking if init. value passed limit`);
+		this.limitPassed(value, "componentDidMount"); //gon check if limit passed to take neccessary actions
+	
+		console.groupEnd();
 	}
 	
 	render() {
-		const {value, isLastInput} = this.props;
+		const {value, isLastInput, changeHandler} = this.props;
 		
 		return (
 			<input
 				className={FldStyle["the-input"]}
 				type="text"
-				onKeyDown={this.backspaceCheckHandler}
-				onChange={this.inputTypeHandler}
+				onChange={changeHandler(this.valueAddedAction, this.valueRemovedAction)}
 				value={value}
-				disabled = {isLastInput? true:false}
-				ref={(node) => this.inputDOM = node}
+				ref={this.inputDOM}
 			/>
 		);
 	}
+	
+	componentDidUpdate() {
+		const {isLastInput, passRef} = this.props;
+		
+		if(isLastInput)
+			passRef && passRef(this.inputDOM.current);
+		//if its the last, make sure its set as the lastNode ref in parent Input after
+		//every render which could be cus of flds getting removed... to make sure it will point to it
+		//after update... ion know if I explained this well
+	}
+	
 }
